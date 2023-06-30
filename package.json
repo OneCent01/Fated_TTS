@@ -1,0 +1,16 @@
+{
+  "name": "hypemoto",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "terser-webpack-plugin": "^5.3.9",
+    "webpack": "^5.80.0",
+    "webpack-cli": "^5.0.2"
+  }
+}
