@@ -11,7 +11,7 @@ export const handleMessageEvent = async (event, sessionData) => {
   const isStreamer = userId === sessionData.streamer.id;
   const isDeveloper = userId === FATED_USER_ID;
   if(isMod || isStreamer || isDeveloper) {
-    handleAdminMessage(text, sessionData);
+    handleAdminMessage(text, sessionData, event.data);
   }
 
   if(
@@ -38,34 +38,44 @@ ADMIN WIDGET COMMANDS
 !ttsShowBalance
 */
 
-const handleAdminMessage = (message, sessionData) => {
-  const [firstWord, secondWord] = message.trim().split(' ');
+const handleAdminMessage = (message, sessionData, data) => {
+  const words = message.trim().split(' ');
 
-  switch(firstWord) {
+  switch(words[0].toLowerCase()) {
     case('!enabletts'):
       setTtsEnabled(sessionData, true);
       break;
     case('!disabletts'):
       setTtsEnabled(sessionData, false);
       break;
+    case('!!skip'):
     case('!skiptts'):
       handleSkipTts(sessionData);
       break;
-    case('!setVoiceVolume'):
-      handleSetVoiceVolume(sessionData, secondWord);
+    case('!setttsvolume'):
+      handleSetVoiceVolume(sessionData, words[1]);
       break;
-    case('!updateVoice'):
-      handleUpdateVoice(sessionData, secondWord);
+    case('!updatedefaultttsvoice'):
+      handleUpdateVoice(sessionData, words[1]);
       break;
-    case('!ttsSetDelay'):
-      handleSetDelay(sessionData, secondWord);
+    case('!setttsdelay'):
+      handleSetDelay(sessionData, words[1]);
       break;
-    case('!ttsShowBalance'):
+    case('!showttsbalance'):
       handleShowBalance(sessionData);
       break;
+    case('!say'):
+      handleAdminTts(sessionData, words.slice(1).join(' '), data);
     default:
       break;
   }
+};
+
+const handleAdminTts = async (sessionData, message, data) => {
+  if(!sessionData.tts.isEnabled) {
+    return;
+  }
+  speak(sessionData, message, data.msgId, data.userId);
 };
 
 const handleShowBalance = async (sessionData) => {

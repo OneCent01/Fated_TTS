@@ -76,47 +76,31 @@ export const nativeSpeech = (sessionData, text) => new Promise(async (resolve) =
 	}
 });
 
-export const fetchSpeech = async (sessionData, text) => {
-	let speechText = text.slice();
+const getTargetVoice = (sessionData, text) => {
+	let speechText = text;
 	const lowerText = text.toLowerCase();
 	
-	let targetVoice = null;
-
-	// check if it's the brian voice
-	if(lowerText.startsWith('brian::')) {
-		targetVoice = 'brian';
-	} 
+	let targetVoice = lowerText.startsWith('brian::') ? 'brian' : null;
 
 	// check if it's the microsoft voices
 	if(!targetVoice) {
-		const msVoice = Object.keys(MICROSOFT_SPEAKER_TEMPLATES).find(
+		targetVoice = Object.keys(MICROSOFT_SPEAKER_TEMPLATES).find(
 			voice => lowerText.startsWith(`${voice}::`)
 		);
-		
-		if(msVoice) {
-			targetVoice = msVoice;
-		} 
 	}
 
 	// check to see if it's one of the elevenlab voices
 	if(!targetVoice) {
-		const elevenLabsVoice = Object.keys(sessionData.tts.elevenLabsVoices).find(
+		targetVoice = Object.keys(sessionData.tts.elevenLabsVoices).find(
 			voice => lowerText.startsWith(`${voice}::`)
 		);
-		
-		if(elevenLabsVoice) {
-			targetVoice = elevenLabsVoice;
-		}
 	}
 	
 	// check to see it if't one of the uberduck voices
 	if(!targetVoice) {
-		const uberduckVoice = Object.keys(UBERDUCK_VOICES).find(
+		targetVoice = Object.keys(UBERDUCK_VOICES).find(
 			voice => lowerText.startsWith(`${voice}::`)
 		);
-		if(uberduckVoice) {
-			targetVoice = uberduckVoice;
-		}
 	}
 
 	// otherwise it doesn't match any of the voices. User the default
@@ -127,34 +111,23 @@ export const fetchSpeech = async (sessionData, text) => {
 	}
 	
 	targetVoice = targetVoice.toLowerCase();
-	speechText = sanitizeSpeechText(speechText);
-	
-	const speechFallbackOrder = [];
+	return [targetVoice, speechText]
+}
+
+export const fetchSpeech = async (sessionData, text) => {
+	const speechFallbackOrder = [
+		fetchBrianSpeech, 
+		nativeSpeech,
+	];
+	const [targetVoice, _text] = getTargetVoice(sessionData, text);
+	const speechText = sanitizeSpeechText(_text.slice());
 	
 	if(Boolean(UBERDUCK_VOICES[targetVoice])) {
-		speechFallbackOrder.push(fetchUberduckSpeech);
-		speechFallbackOrder.push(fetchBrianSpeech);
-		speechFallbackOrder.push(fetchMicrosoftSpeech);
-		speechFallbackOrder.push(nativeSpeech);
-		speechFallbackOrder.push(fetchElevenLabsSpeech);
+		speechFallbackOrder.unshift(fetchUberduckSpeech);
 	} else if(ELEVEN_LABS_VOICE_NAMES.has(targetVoice)) {
-		speechFallbackOrder.push(fetchElevenLabsSpeech);
-		speechFallbackOrder.push(fetchBrianSpeech);
-		speechFallbackOrder.push(fetchMicrosoftSpeech);
-		speechFallbackOrder.push(fetchUberduckSpeech);
-		speechFallbackOrder.push(nativeSpeech);
-	} else if(targetVoice === 'brian') {
-		speechFallbackOrder.push(fetchBrianSpeech);
-		speechFallbackOrder.push(fetchMicrosoftSpeech);
-		speechFallbackOrder.push(fetchElevenLabsSpeech);
-		speechFallbackOrder.push(fetchUberduckSpeech);
-		speechFallbackOrder.push(nativeSpeech);
-	} else {
-		speechFallbackOrder.push(fetchMicrosoftSpeech);
-		speechFallbackOrder.push(fetchBrianSpeech);
-		speechFallbackOrder.push(fetchElevenLabsSpeech);
-		speechFallbackOrder.push(fetchUberduckSpeech);
-		speechFallbackOrder.push(nativeSpeech);
+		speechFallbackOrder.unshift(fetchElevenLabsSpeech);
+	} else if(MICROSOFT_SPEAKER_TEMPLATES[targetVoice]) {
+		speechFallbackOrder.unshift(fetchMicrosoftSpeech);
 	}
 
 	const availableCredit = await fetchAvailableCredits(sessionData.streamer.id);

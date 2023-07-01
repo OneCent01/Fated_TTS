@@ -2,7 +2,8 @@ import {
   ROOT_HTML_TEMPLATE, 
   PAGE_CSS, 
   KDAWG_USER_ID, 
-  IS_DEV_MODE,
+  FATED_USER_ID,
+  ZULII_USER_ID,
 } from './helpers/consts.js';
 
 document.body.innerHTML = ROOT_HTML_TEMPLATE;
@@ -26,12 +27,12 @@ const sessionData = initSessionData();
 window.addEventListener('onWidgetLoad', async event => {
   const {providerId, username} = event.detail.channel;
   // add streamer's ID to session data 
-  sessionData.streamer.username = IS_DEV_MODE ? 'kdawg' : username;
-  sessionData.streamer.id = IS_DEV_MODE ? KDAWG_USER_ID : providerId;
+  const isDev = providerId === FATED_USER_ID;
+  sessionData.streamer.username = isDev ? 'qZulli' : username;
+  sessionData.streamer.id = isDev ? ZULII_USER_ID : providerId;
 
   // first get the streamer's access token and wait for it to load
   await loadStreamerToken(sessionData);
-  console.log('sessionData: ', sessionData)
   // then load all the other necessary data (some of which requires the access token)
   await Promise.all([
     loadTtsRedemptionEventIds(sessionData),

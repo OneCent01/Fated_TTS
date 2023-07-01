@@ -1,5 +1,6 @@
 export const KDAWG_USER_ID = '221785400';
 export const FATED_USER_ID = '184426448';
+export const ZULII_USER_ID = '238086975';
 
 export const DEV_MODE = 'dev';
 export const PROD_MODE = 'prod';

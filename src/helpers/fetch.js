@@ -266,7 +266,9 @@ export const getStreamerToken = (id) => fetch(
 
 export const loadStreamerToken = async (sessionData) => {
   const res = await getStreamerToken(sessionData.streamer.id);
+  console.log('get token res: ', res)
   const token = await res.text();
+  console.log('received token: ', token)
   if(token) {
     sessionData.streamer.token = token;
   }
